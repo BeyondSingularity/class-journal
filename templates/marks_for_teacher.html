@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div align="center"> <font size=7> Табель успеваемости <br><br></font></div>
+<div class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
+  <div class="btn-group mr-2" role="group" aria-label="First group">
+      {% for class in current_user.classrooms %}
+        <a type="button" class="{{"btn btn-dark" if class.code == classcode else "btn btn-light"}}" href="{{"http://127.0.0.1:8080/marks/" + class.code}}">{{class.name}}</a>
+      {% endfor %}
+  </div>
+</div>
+<br>
+<div align="center" class="table-responsive">
+    <table class="table">
+        {% for group in classroom.group_of_marks %}
+            <tr>
+                <th><button type="button" class="btn btn-light" data-toggle="popover" title="Email ученика" data-content="{{group.user.email}}"><font size=3>{{group.name}}</font></button></th>
+                {% for mark in group.marks %}
+                    <th>
+                        <button type="button" class="{{ "btn btn-danger" if mark.mark == 2 else "btn btn-warning" if mark.mark == 3 else "btn btn-primary" if mark.mark == 4 else "btn btn-success" }}" data-toggle="popover" title={{mark.date}} data-content="{{mark.comment}}">{{mark.mark}}</button>
+                    </th>
+                {% if loop.last %}
+                    {% for i in range(mx - loop.index) %}
+                        <th></th>
+                    {% endfor %}
+                <th><font size=4>{{group.total / loop.index}}</font></th>
+                {% endif %}
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    </table>
+</div>
+<a type="button" class="btn btn-info" href="{{"http://127.0.0.1:8080/add_mark/" + classcode}}" >Поставить оценку</a></div>
+{% endblock %}
+
