@@ -293,7 +293,14 @@ def create_classroom():
         return redirect('/add_classroom')
     if form.validate_on_submit():
         ans = ''
-        global step, p, MOD
+        p = 26
+        MOD = p ** 5
+        step = 288453275
+        s = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+        sl = [0] * 26
+        for i in range(26):
+            sl[i] = s[i]
+
         current_hash = get_hash()
         d = current_hash
         current_hash += step
@@ -376,26 +383,8 @@ def rewrite_hash(cur_hash):
 
 
 def main():
-    db_session.global_init("data/db.sqlite")
-    p = 26
-    MOD = p ** 5
-    step = 288453275
-
-    s = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-    sl = [0] * 26
-    for i in range(26):
-        sl[i] = s[i]
     app.run()
 
 
 if __name__ == '__main__':
-    db_session.global_init("data/db.sqlite")
-    p = 26
-    MOD = p ** 5
-    step = 288453275
-
-    s = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-    sl = [0] * 26
-    for i in range(26):
-        sl[i] = s[i]
     app.run()
