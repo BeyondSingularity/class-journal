@@ -366,6 +366,15 @@ def rewrite_hash(cur_hash):
 
 
 def main():
+    db_session.global_init("data/db.sqlite")
+    p = 26
+    MOD = p ** 5
+    step = 288453275
+
+    s = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    sl = [0] * 26
+    for i in range(26):
+        sl[i] = s[i]
     app.run()
 
 
