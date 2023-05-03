@@ -1,23 +1,28 @@
+from src import db_session
 from flask import Flask
 from flask import url_for, request
 from flask import render_template
-from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from flask_login import LoginManager, login_user, logout_user
+from flask_login import login_required, current_user
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, BooleanField, SubmitField, IntegerField
+from wtforms import StringField, PasswordField, BooleanField
+from wtforms import SubmitField, IntegerField
 from wtforms.validators import DataRequired
 from flask import redirect
 from wtforms.fields.html5 import EmailField
 from flask_sqlalchemy import SQLAlchemy
-from data.__all_models import User, Classroom, Link, Marks, GroupOfMarks, Payload
+from src.__all_models import User, Classroom, Marks, GroupOfMarks, Payload
 
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
+app.config['SECRET_KEY'] = 'very_secret_key'
 db = SQLAlchemy(app)
 
 
 login_manager = LoginManager()
 login_manager.init_app(app)
+
+
 @app.route('/')
 @app.route('/index')
 def index():
@@ -26,16 +31,19 @@ def index():
     param['title'] = 'Домашняя страница'
     return render_template("index.html", **param)
 
+
 @login_manager.user_loader
 def load_user(user_id):
     session = db_session.create_session()
     return session.query(User).get(user_id)
+
 
 class LoginForm(FlaskForm):
     email = EmailField('Почта', validators=[DataRequired()])
     password = PasswordField('Пароль', validators=[DataRequired()])
     remember_me = BooleanField('Запомнить меня')
     submit = SubmitField('Войти')
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -44,13 +52,15 @@ def login():
     form = LoginForm()
     if form.validate_on_submit():
         session = db_session.create_session()
-        user = session.query(User).filter(User.email == form.email.data).first()
+        user = session.query(User).filter(
+            User.email == form.email.data).first()
         if user and user.check_password(form.password.data):
             login_user(user, remember=form.remember_me.data)
             return redirect("/marks")
         form.email.errors.append('Неверный логин или пароль')
         return render_template('login.html', form=form)
     return render_template('login.html', title='Авторизация', form=form)
+
 
 @app.route('/logout')
 @login_required
@@ -60,17 +70,12 @@ def logout():
     logout_user()
     return redirect("/")
 
-def main():
-    app.run()
-
-from data import db_session
-db_session.global_init("db/blogs.sqlite")
-
 
 class RegisterForm(FlaskForm):
     email = EmailField('Почта', validators=[DataRequired()])
     password = PasswordField('Пароль', validators=[DataRequired()])
-    password_again = PasswordField('Повторите пароль', validators=[DataRequired()])
+    password_again = PasswordField(
+        'Повторите пароль', validators=[DataRequired()])
     name = StringField('Имя и Фамилия', validators=[DataRequired()])
     submit = SubmitField('Войти')
     is_teacher = BooleanField('Я - учитель')
@@ -82,11 +87,19 @@ def reqister():
     if form.validate_on_submit():
         if form.password.data != form.password_again.data:
             form.password_again.errors.append("Пароли не совпадают")
-            return render_template('register.html', title='Регистрация', form=form)
+            return render_template(
+                'register.html',
+                title='Регистрация',
+                form=form
+            )
         session = db_session.create_session()
         if session.query(User).filter(User.email == form.email.data).first():
             form.email.errors.append("Такой пользователь уже есть")
-            return render_template('register.html', title='Регистрация', form=form)
+            return render_template(
+                'register.html',
+                title='Регистрация',
+                form=form
+            )
         user = User(
             name=form.name.data,
             email=form.email.data,
@@ -98,9 +111,11 @@ def reqister():
         return redirect('/login')
     return render_template('register.html', title='Регистрация', form=form)
 
+
 @app.route('/messages')
 def messages():
     return "Здесь пока ничего нет..."
+
 
 @app.route('/profile')
 def profile():
@@ -111,6 +126,7 @@ def profile():
         a.append(clas.code + ' - ' + clas.name)
     return render_template('profile.html', title="Профиль", a=a)
 
+
 @app.route('/marks/<classcode>')
 def marks_teacher(classcode):
     if not current_user.is_authenticated:
@@ -119,13 +135,18 @@ def marks_teacher(classcode):
         return redirect('/marks')
     mx = 0
     session = db_session.create_session()
-    classroom = session.query(Classroom).filter(Classroom.code == classcode).first()
+    classroom = session.query(Classroom).filter(
+        Classroom.code == classcode).first()
     for i in classroom.group_of_marks:
-        print(i.name)
-        for j in i.marks:
-            print(j.mark, j.comment)
         mx = max(mx, len(i.marks))
-    return render_template('marks_for_teacher.html', mx=mx, classcode=classcode, title='Табель успеваемости', classroom=classroom)
+    return render_template(
+        'marks_for_teacher.html',
+        mx=mx,
+        classcode=classcode,
+        title='Табель успеваемости',
+        classroom=classroom
+    )
+
 
 @app.route('/marks')
 def marks():
@@ -156,27 +177,39 @@ def add_classroom():
         session = db_session.create_session()
         flag2 = False
         for i in current_user.classrooms:
-            print(i.code)
             if i.code == form.code.data:
                 flag2 = True
-        flag = session.query(Classroom).filter(Classroom.code == form.code.data).first()
-        print("len(form.code.data) != 5", len(form.code.data) != 5)
-        print("all([i in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' for i in form.code.data])", all([i in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' for i in form.code.data]))
-        print("flag", flag == None)
-        print("flag2", flag2)
-        if len(form.code.data) != 5 or not all([i in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' for i in form.code.data]) or (flag == None) or flag2:
+        flag = session.query(Classroom).filter(
+            Classroom.code == form.code.data).first()
+        if len(form.code.data) != 5 or not \
+                all([i in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' for i in form.code.data]) \
+                or (flag == None) or flag2:
+
             form.code.errors.append("Код класса введён неверно")
-            return render_template('add_classroom.html', form=form, title='Добавить класс')
+            return render_template(
+                'add_classroom.html',
+                form=form,
+                title='Добавить класс'
+            )
         user = session.query(User).filter(User.id == current_user.id).first()
-        classroom = session.query(Classroom).filter(Classroom.code == form.code.data).first()
+        classroom = session.query(Classroom).filter(
+            Classroom.code == form.code.data).first()
         user.classrooms.append(classroom)
         marks = GroupOfMarks(name=current_user.name)
         user.group_of_marks.append(marks)
         classroom.group_of_marks.append(marks)
         session.add(marks)
         session.commit()
-        return render_template('your_code.html', title="Класс добавлен", insert_text="Класс был успешно добавлен")
-    return render_template('add_classroom.html', form=form, title='Добавить класс')
+        return render_template(
+            'your_code.html',
+            title="Класс добавлен",
+            insert_text="Класс был успешно добавлен"
+        )
+    return render_template(
+        'add_classroom.html',
+        form=form,
+        title='Добавить класс'
+    )
 
 
 class AddMarkForm(FlaskForm):
@@ -185,6 +218,7 @@ class AddMarkForm(FlaskForm):
     mark = IntegerField('Оценка (2, 3, 4, 5)', validators=[DataRequired()])
     submit = SubmitField('Выставить')
 
+
 @app.route('/add_mark/<code>', methods=['GET', 'POST'])
 def add_mark(code):
     if not current_user.is_authenticated:
@@ -192,7 +226,8 @@ def add_mark(code):
     form = AddMarkForm()
     if form.validate_on_submit():
         session = db_session.create_session()
-        classroom = session.query(Classroom).filter(Classroom.code == code).first()
+        classroom = session.query(Classroom).filter(
+            Classroom.code == code).first()
         flag = False
         for user in classroom.users:
             if user.email == form.email.data:
@@ -200,28 +235,47 @@ def add_mark(code):
                 flag = True
         if not flag:
             form.email.errors.append("Такого ученика нет в вашем классе")
-            return render_template('add_mark.html', form=form, title='Выставление оценок')
+            return render_template(
+                'add_mark.html',
+                form=form, title='Выставление оценок'
+            )
         if form.mark.data not in [2, 3, 4, 5]:
             form.mark.errors.append("Оценка введена неверно")
-            return render_template('add_mark.html', form=form, title='Выставление оценок')
-        group = session.query(GroupOfMarks).filter(GroupOfMarks.user_id == pending_user.id, GroupOfMarks.classroom_id == classroom.id).first()
+            return render_template(
+                'add_mark.html',
+                form=form,
+                title='Выставление оценок'
+            )
+        group = session.query(GroupOfMarks).filter(
+            GroupOfMarks.user_id == pending_user.id,
+            GroupOfMarks.classroom_id == classroom.id
+        ).first()
         mark = Marks(comment=form.comment.data, mark=form.mark.data)
         group.marks.append(mark)
         group.total = group.total + form.mark.data
         session.add(mark)
         session.commit()
         return render_template('mark_was_added.html', title='Успех!', code=code)
-    return render_template('add_mark.html', form=form, title='Выставление оценок')
+    return render_template(
+        'add_mark.html',
+        form=form,
+        title='Выставление оценок'
+    )
+
+
+@app.route('/your_code/<code>')
+def show_code(code):
+    return render_template(
+        'your_code.html',
+        title='Ваш код',
+        insert_text=f"Ваш код от нового класса: {code}. " +
+        "Отправьте его своим ученикам"
+    )
 
 
 class ClassroomCreateForm(FlaskForm):
     name = StringField('Название вашего класса', validators=[DataRequired()])
     submit = SubmitField('Создать')
-
-
-@app.route('/your_code/<code>')
-def show_code(code):
-    return render_template('your_code.html', title='Ваш код', insert_text=f"Ваш код от нового класса: {code}. Отправьте его своим ученикам")
 
 
 @app.route('/create_classroom', methods=['POST', 'GET'])
@@ -250,13 +304,18 @@ def create_classroom():
         session.add(classroom)
         session.commit()
         return redirect('/your_code/' + ans)
-    return render_template('create_classroom.html', title='Создать класс', form=form)
+    return render_template(
+        'create_classroom.html',
+        title='Создать класс',
+        form=form
+    )
 
 
 class ChangePassword(FlaskForm):
     old_password = EmailField('Старый пароль', validators=[DataRequired()])
     new_password = PasswordField('Новый пароль', validators=[DataRequired()])
-    new_password_again = PasswordField('Повторите новый пароль', validators=[DataRequired()])
+    new_password_again = PasswordField(
+        'Повторите новый пароль', validators=[DataRequired()])
     submit = SubmitField('Сменить')
 
 
@@ -268,17 +327,29 @@ def change_password():
     if form.validate_on_submit():
         if form.new_password.data != form.new_password_again.data:
             form.new_password_again.errors.append("Новые пароли не совпадают")
-            return render_template('change_password.html', title='Смена пароля', form=form)
+            return render_template(
+                'change_password.html',
+                title='Смена пароля',
+                form=form
+            )
         session = db_session.create_session()
-        if not(current_user.check_password(form.old_password.data)):
+        if not (current_user.check_password(form.old_password.data)):
             form.new_password_again.errors.append("Старый пароль неверен")
-            return render_template('change_password.html', title='Смена пароля', form=form)
+            return render_template(
+                'change_password.html',
+                title='Смена пароля',
+                form=form
+            )
         user = session.query(User).filter(User.id == current_user.id).first()
         user.set_password(form.new_password.data)
         session.commit()
         return redirect('/profile')
 
-    return render_template('change_password.html', title='Смена пароля', form=form)
+    return render_template(
+        'change_password.html',
+        title='Смена пароля',
+        form=form
+    )
 
 
 def get_hash():
@@ -293,13 +364,19 @@ def rewrite_hash(cur_hash):
     payload.cur_hash = cur_hash
     session.commit()
 
+
+def main():
+    app.run()
+
+
 if __name__ == '__main__':
+    db_session.global_init("data/db.sqlite")
     p = 26
     MOD = p ** 5
     step = 288453275
 
     s = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-    sl = {}
+    sl = [0] * 26
     for i in range(26):
         sl[i] = s[i]
     app.run()

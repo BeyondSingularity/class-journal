@@ -6,7 +6,7 @@
 <div class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
   <div class="btn-group mr-2" role="group" aria-label="First group">
       {% for class in current_user.classrooms %}
-        <a type="button" class="{{"btn btn-dark" if class.code == classcode else "btn btn-light"}}" href="{{"http://127.0.0.1:8080/marks/" + class.code}}">{{class.name}}</a>
+        <a type="button" class="{{"btn btn-dark" if class.code == classcode else "btn btn-light"}}" href="{{ url_for('marks', _external=True) + '/' + class.code}}">{{class.name}}</a>
       {% endfor %}
   </div>
 </div>
@@ -24,13 +24,13 @@
                     {% for i in range(mx - loop.index) %}
                         <th></th>
                     {% endfor %}
-                <th><font size=4>{{group.total / loop.index}}</font></th>
+                <th><font size=4>{{"{:.2f}".format(group.total / loop.index)}}</font></th>
                 {% endif %}
                 {% endfor %}
             </tr>
         {% endfor %}
     </table>
 </div>
-<a type="button" class="btn btn-info" href="{{"http://127.0.0.1:8080/add_mark/" + classcode}}" >Поставить оценку</a></div>
+<a type="button" class="btn btn-info" href="{{ url_for('add_mark', code=classcode, _external=True) }}" >Поставить оценку</a></div>
 {% endblock %}
 

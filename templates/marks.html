@@ -4,7 +4,7 @@
 
 <div align="center"> <font size=7> Табель успеваемости </font></div><br>
 
-<div align="center" class="table-responsive">
+<div align="left" class="table-responsive">
     <table class="table">
         {% for group in current_user.group_of_marks %}
             <tr>
@@ -17,7 +17,7 @@
                     {% for i in range(mx - loop.index) %}
                         <th></th>
                     {% endfor %}
-                <th><font size=4>{{group.total / loop.index}}</font></th>
+                <th><font size=4>{{"{:.2f}".format(group.total / loop.index)}}</font></th>
                 {% endif %}
                 {% endfor %}
             </tr>

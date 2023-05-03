@@ -1,12 +1,12 @@
 import datetime
-import sqlalchemy
-from sqlalchemy import create_engine, ForeignKey, Column, Integer, String, DateTime, Boolean
+from sqlalchemy import ForeignKey, Column, Integer, String, DateTime, Boolean
 
 import datetime
 from .db_session import SqlAlchemyBase
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 from sqlalchemy import orm
+
 
 class User(SqlAlchemyBase, UserMixin):
     __tablename__ = 'user'
@@ -18,7 +18,11 @@ class User(SqlAlchemyBase, UserMixin):
     hashed_password = Column(String, nullable=True)
     created_date = Column(DateTime, default=datetime.datetime.now)
 
-    classrooms = orm.relationship('Classroom', secondary='link', lazy='subquery')
+    classrooms = orm.relationship(
+        'Classroom',
+        secondary='link',
+        lazy='subquery'
+    )
     group_of_marks = orm.relation('GroupOfMarks', back_populates='user')
 
     def set_password(self, password):
@@ -36,13 +40,18 @@ class Classroom(SqlAlchemyBase):
     name = Column(String, nullable=True)
     created_date = Column(DateTime, default=datetime.datetime.now)
     users = orm.relationship('User', secondary='link')
-    group_of_marks = orm.relationship('GroupOfMarks', back_populates='classroom', lazy='subquery')
+    group_of_marks = orm.relationship(
+        'GroupOfMarks',
+        back_populates='classroom',
+        lazy='subquery'
+    )
 
 
 class Link(SqlAlchemyBase):
     __tablename__ = 'link'
 
-    classroom_id = Column(Integer, ForeignKey('classroom.id'), primary_key=True)
+    classroom_id = Column(Integer, ForeignKey(
+        'classroom.id'), primary_key=True)
     user_id = Column(Integer, ForeignKey('user.id'), primary_key=True)
 
 
@@ -67,7 +76,8 @@ class Marks(SqlAlchemyBase):
     mark = Column(Integer, nullable=True)
     group_of_marks = orm.relation('GroupOfMarks')
     comment = Column(String, default='', nullable=True)
-    date = Column(String, default='.'.join([str(0) * (2 - len(str(i))) + str(i) for i in datetime.datetime.now().timetuple()[1:3][::-1]]))
+    default = datetime.date.today().strftime("%m.%d")
+    date = Column(String, default=default)
 
 
 class Payload(SqlAlchemyBase):
