@@ -34,6 +34,7 @@ def index():
 
 @login_manager.user_loader
 def load_user(user_id):
+    db_session.global_init("data/db.sqlite")
     session = db_session.create_session()
     return session.query(User).get(user_id)
 
@@ -51,6 +52,7 @@ def login():
         return redirect("/marks")
     form = LoginForm()
     if form.validate_on_submit():
+        db_session.global_init("data/db.sqlite")
         session = db_session.create_session()
         user = session.query(User).filter(
             User.email == form.email.data).first()
@@ -92,6 +94,7 @@ def reqister():
                 title='Регистрация',
                 form=form
             )
+        db_session.global_init("data/db.sqlite")
         session = db_session.create_session()
         if session.query(User).filter(User.email == form.email.data).first():
             form.email.errors.append("Такой пользователь уже есть")
@@ -134,6 +137,7 @@ def marks_teacher(classcode):
     if not current_user.is_teacher:
         return redirect('/marks')
     mx = 0
+    db_session.global_init("data/db.sqlite")
     session = db_session.create_session()
     classroom = session.query(Classroom).filter(
         Classroom.code == classcode).first()
@@ -174,6 +178,7 @@ def add_classroom():
     if current_user.is_teacher:
         return redirect('/create_classroom')
     if form.validate_on_submit():
+        db_session.global_init("data/db.sqlite")
         session = db_session.create_session()
         flag2 = False
         for i in current_user.classrooms:
@@ -225,6 +230,7 @@ def add_mark(code):
         return redirect("/index")
     form = AddMarkForm()
     if form.validate_on_submit():
+        db_session.global_init("data/db.sqlite")
         session = db_session.create_session()
         classroom = session.query(Classroom).filter(
             Classroom.code == code).first()
@@ -297,6 +303,7 @@ def create_classroom():
             ans += sl[d % p]
             d //= p
         ans += 'A' * (5 - len(ans))
+        db_session.global_init("data/db.sqlite")
         session = db_session.create_session()
         classroom = Classroom(name=form.name.data, code=ans)
         user = session.query(User).filter(User.id == current_user.id).first()
@@ -321,6 +328,7 @@ class ChangePassword(FlaskForm):
 
 @app.route('/change_password', methods=['GET', 'POST'])
 def change_password():
+    db_session.global_init("data/db.sqlite")
     if not current_user.is_authenticated:
         return redirect("/index")
     form = ChangePassword()
@@ -353,12 +361,14 @@ def change_password():
 
 
 def get_hash():
+    db_session.global_init("data/db.sqlite")
     session = db_session.create_session()
     payload = session.query(Payload).filter(True).first()
     return payload.cur_hash
 
 
 def rewrite_hash(cur_hash):
+    db_session.global_init("data/db.sqlite")
     session = db_session.create_session()
     payload = session.query(Payload).first()
     payload.cur_hash = cur_hash
