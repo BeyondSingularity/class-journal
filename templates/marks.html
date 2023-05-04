@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div align="center"> <font size=7> Табель успеваемости </font></div><br>
+
+<div align="left" class="table-responsive">
+    <table class="table">
+        {% for group in current_user.group_of_marks %}
+            <tr>
+                <th><button type="button" class="btn btn-light" data-container="body" data-toggle="popover" data-placement="right" title="Код класса" data-content="{{group.classroom.code}}"><font size=4>{{group.classroom.name}}</font></button></th>
+                {% for mark in group.marks %}
+                    <th>
+                        <button type="button" class="{{ "btn btn-danger" if mark.mark == 2 else "btn btn-warning" if mark.mark == 3 else "btn btn-primary" if mark.mark == 4 else "btn btn-success" }}" data-toggle="popover" title={{mark.date}} data-content="{{mark.comment}}">{{mark.mark}}</button>
+                    </th>
+                {% if loop.last %}
+                    {% for i in range(mx - loop.index) %}
+                        <th></th>
+                    {% endfor %}
+                <th><font size=4>{{"{:.2f}".format(group.total / loop.index)}}</font></th>
+                {% endif %}
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    </table>
+</div>
+{% endblock %}

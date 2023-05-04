@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div align="center">
+    <p><h4>Оценка была добавлена. Перейдите в <a href="{{ url_for('marks', _external=True) + '/' + code}}">таблицу успеваемости</a> чтобы посмотреть.</h4></p>
+</div>
+{% endblock %}
